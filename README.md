@@ -1,4 +1,4 @@
-# MarkPoint \- Wighting PPT files like wighting codes  
+# MarkPoint \- Writing PPT files like wighting codes  
 
 The world has long suffered under the tyranny of PowerPoint.
 
