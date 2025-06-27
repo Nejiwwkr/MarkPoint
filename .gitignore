@@ -1,3 +1,4 @@
 test/
-res/
 .venv/
+build/
+markpoint.egg-info/

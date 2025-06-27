@@ -1,8 +1,10 @@
 import re
+from collections.abc import Callable
 from io import BytesIO
 
 import matplotlib
 from PIL import Image
+from pptx.slide import Slide
 from pptx.util import Inches
 
 matplotlib.use('Agg')
@@ -32,7 +34,7 @@ def latex_to_png(latex_str):
     buf.seek(0)
     return buf
 
-def add_formula(slide, formula, meta_data, top: float):
+def add_formula(slide, formula, meta_data, top: float) -> (float, Callable[[None], None]):
     img_buffer = latex_to_png(formula)
 
     image = Image.open(img_buffer)
@@ -42,8 +44,8 @@ def add_formula(slide, formula, meta_data, top: float):
     # 定义放置图像的位置和大小
     formula_height: float = height/207 *0.6
     left = Inches((meta_data.w - (width / height) * formula_height) / 2)
-    slide.shapes.add_picture(img_buffer, left, Inches(top), height=Inches(formula_height))
-    return formula_height
+
+    return formula_height, lambda: slide.shapes.add_picture(img_buffer, left, Inches(top), height=Inches(formula_height))
 
 
 def merge_dollars_content(text):
