@@ -68,7 +68,7 @@ MarkPoint revolutionizes technical and academic presentations by combining the e
 -   Educators preparing course materials  
 -   Developers who hate GUI editors
 
-Join us who've escaped PowerPoint prison. [Get Started →](https://github.com/Nejiwwkr/MarkPoint)|[See Examples →](example/Example.pptx)  
+Join us who've escaped PowerPoint prison. [Get Started →](https://github.com/Nejiwwkr/MarkPoint)|[See Examples →](example/Example.pdf)  
 
 
 ## Roadmap  
