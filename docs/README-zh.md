@@ -61,8 +61,6 @@ MarkPoint 通过将 Markdown 的效率与 PowerPoint 的视觉表现力相结合
 
 3.  编译：`markpoint --original "示例.mp" --target "示例.pptx" --type "pptx"`
 
----
-
 ## 为谁而设计？
 -   撰写讲座幻灯片的学术研究人员
 -   创建技术报告的工程师
@@ -72,11 +70,7 @@ MarkPoint 通过将 Markdown 的效率与 PowerPoint 的视觉表现力相结合
 加入数千名已逃离 PPT 苦海的行列。
 [立即开始 →](https://github.com/Nejiwwkr/MarkPoint) | [查看示例 →](../example/Example.pptx)
 
----
-
 ## 发展路线图
 -   **v0.9** (当前版本)：核心渲染引擎
 -   **v1.0**：表格/代码块/动画支持
 -   **v2.0**：IDEA/VSC/Vim 语法解析支持
-
----

@@ -61,7 +61,6 @@ MarkPoint revolutionizes technical and academic presentations by combining the e
 
 3.  Compile: `markpoint --original "Example.mp" --target "Example.pptx" --type "pptx"`  
 
----
 
 ## Designed For  
 -   Academic researchers writing lecture slides  
@@ -71,11 +70,8 @@ MarkPoint revolutionizes technical and academic presentations by combining the e
 
 Join thousands who've escaped PowerPoint prison. [Get Started →](https://github.com/Nejiwwkr/MarkPoint)|[See Examples →](example/Example.pptx)  
 
----
 
 ## Roadmap  
 -   **v0.9** (Current): Core rendering engine  
 -   **v1.0**: Tables/Code blocks/Animation support  
 -   **v2.0**: IDEA/VSC/Vim Syntax Support
-
----
