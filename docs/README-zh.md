@@ -67,7 +67,7 @@ MarkPoint 通过将 Markdown 的效率与 PowerPoint 的视觉表现力相结合
 -   准备课程材料的教育工作者
 -   厌恶 GUI 编辑器的开发者
 
-加入数千名已逃离 PPT 苦海的行列。
+加入逃离 PPT 苦海的行列。
 [立即开始 →](https://github.com/Nejiwwkr/MarkPoint) | [查看示例 →](../example/Example.pptx)
 
 ## 发展路线图
