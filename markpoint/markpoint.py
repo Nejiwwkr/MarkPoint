@@ -7,7 +7,7 @@ from pptx.slide import Slide
 from pptx.util import Inches, Pt
 
 from markpoint.formula import merge_dollars_content, add_formula
-from markpoint.layout import estimate_textbox_height
+from markpoint.layout import estimate_textbox_height, parse_escape_characters, complex_split
 
 
 def render(file_path, target_path, target_format='pptx'):
@@ -130,7 +130,6 @@ def parse_cover(cover: str, meta_data: MetaData, slide: Slide):
     add_simple_text_box(slide, info, meta_data.font, 18, [meta_data.w * 0.618 + 1, meta_data.h / 2 + 2, meta_data.w * 0.322 - 1, 1])
 
 
-#22,26,14,14,12,12|11
 def parse_content(content: str, meta_data: MetaData, prs: Presentation):
     blank_layout = prs.slide_layouts[6]
     slide = prs.slides.add_slide(blank_layout)
@@ -140,57 +139,71 @@ def parse_content(content: str, meta_data: MetaData, prs: Presentation):
     current_height = 0
     spacing = 0.2
     tittle = ''
+
+    def check_page(current, delta) -> (float, Slide):
+        if current + delta > meta_data.h - 0.3:
+            # 翻页
+            _slide = prs.slides.add_slide(blank_layout)
+            if tittle != '':
+                add_rectangle(_slide, meta_data.theme, [0, 0, meta_data.w, 1.5])
+                add_simple_text_box(_slide, tittle, meta_data.font, 48, [1, 0.26, meta_data.w - 2, 1.24])
+                current = 1.5 + spacing
+            return current, _slide
+        return None
+
     for part in content.splitlines():
         part = part.strip()
-        if re.match(r'#[^#].*',part):
+
+        if re.match(r'!!!',part):
+            #翻页
+            slide = prs.slides.add_slide(blank_layout)
+            if tittle != '':
+                add_rectangle(slide, meta_data.theme, [0,0,meta_data.w,1.5])
+                add_simple_text_box(slide, tittle, meta_data.font, 48, [1, 0.26, meta_data.w - 2, 1.24])
+                current_height = 1.5 + spacing
+        elif re.match(r'#[^#].*',part):
             tittle = re.sub(r'#\s*', '', part)
             # 页面一级标题处理
-            add_rectangle(slide, meta_data.theme, [0,0,meta_data.w,1.5])
-            add_simple_text_box(slide, tittle, meta_data.font, 48, [1, 0.26, meta_data.w - 2, 1.24])
-            current_height += 1.5 + spacing
+            if tittle != '':
+                add_rectangle(slide, meta_data.theme, [0,0,meta_data.w,1.5])
+                add_simple_text_box(slide, tittle, meta_data.font, 48, [1, 0.26, meta_data.w - 2, 1.24])
+                current_height += 1.5 + spacing
         elif re.match(r'##[^#].*',part):
             # 正文一级标题
             tittleI = re.sub(r'##\s*', '', part)
             height = estimate_textbox_height(meta_data.w - 2,32,tittleI)
-            if current_height + height > meta_data.h:
-                #翻页
-                slide = prs.slides.add_slide(blank_layout)
-                add_rectangle(slide, meta_data.theme, [0,0,meta_data.w,1.5])
-                add_simple_text_box(slide, tittle, meta_data.font, 48, [1, 0.26, meta_data.w - 2, 1.24])
-                current_height = 1.5 + spacing
+
+            if (temp := check_page(current_height, height)) is not None:
+                current_height, slide = temp
+
             add_simple_text_box(slide, tittleI, meta_data.font, 32, [1, current_height, meta_data.w - 2, height])
             current_height += height + spacing
         elif re.match(r'###[^#].*',part):
             # 正文二级标题
             tittleII = re.sub(r'###\s*', '', part)
             height = estimate_textbox_height(meta_data.w - 2,24,tittleII)
-            if current_height+height > meta_data.h:
-                #翻页
-                slide = prs.slides.add_slide(blank_layout)
-                add_rectangle(slide, meta_data.theme, [0,0,meta_data.w,1.5])
-                add_simple_text_box(slide, tittle, meta_data.font, 48, [1, 0.26, meta_data.w - 2, 1.24])
-                current_height = 1.5 + spacing
+
+            if (temp := check_page(current_height, height)) is not None:
+                current_height, slide = temp
+
             add_simple_text_box(slide, tittleII, meta_data.font, 24, [1, current_height, meta_data.w - 2, height])
             current_height += height + spacing
         elif re.match(r'^\$\$.*\$\$$',part):
             # 公式
             formula = re.sub(r'\$\$', '', part)
-            if current_height+1.0 > meta_data.h:
-                #翻页
-                slide = prs.slides.add_slide(blank_layout)
-                add_rectangle(slide, meta_data.theme, [0,0,meta_data.w,1.5])
-                add_simple_text_box(slide, tittle, meta_data.font, 48, [1, 0.26, meta_data.w - 2, 1.24])
-                current_height = 1.5 + spacing
-            height = add_formula(slide, formula, meta_data, current_height - spacing)
+
+            height, how = add_formula(slide, formula, meta_data, current_height - spacing)
+            if (temp := check_page(current_height, height)) is not None:
+                current_height, slide = temp
+            how()
+
             current_height += height
         elif re.match(r'[^#\n].*',part):
             height = estimate_textbox_height(meta_data.w - 2,18,part)
-            if current_height+height > meta_data.h:
-                #翻页
-                slide = prs.slides.add_slide(blank_layout)
-                add_rectangle(slide, meta_data.theme, [0,0,meta_data.w,1.5])
-                add_simple_text_box(slide, tittle, meta_data.font, 48, [1, 0.26, meta_data.w - 2, 1.24])
-                current_height = 1.5 + spacing
+
+            if (temp := check_page(current_height, height)) is not None:
+                current_height, slide = temp
+
             add_simple_text_box(slide, part, meta_data.font, 18, [1, current_height, meta_data.w - 2, height])
             current_height += height + spacing
 
@@ -209,21 +222,41 @@ def add_simple_text_box(slide, text, _font, size, param, is_bold=False, color=RG
     :param color: the color of the text
     :return: nothing
     """
+    #添加文本框
     textbox = slide.shapes.add_textbox(Inches(param[0]), Inches(param[1]), Inches(param[2]), Inches(param[3]))
     text_frame = textbox.text_frame
     text_frame.word_wrap = True
 
     # 重用第一个默认段落
     p = text_frame.paragraphs[0]
-    p.text = text.strip()
 
-    # 设置字体属性
-    font = p.font
-    font.name = _font
-    font.size = Pt(size)
-    font.bold = is_bold
-    font.color.rgb = color
-
+    text = text.strip()
+    if "_"  not in text and "*" not in text:
+        # 设置字体属性
+        set_font(p, _font, size, is_bold, color)
+        p.text = parse_escape_characters(text)
+    else:
+        text = re.sub(r'\*', '_', text)
+        for e in complex_split(text, '_'):
+            if e.startswith('_') and not e.startswith('__'):
+                r = p.add_run()
+                r.text = parse_escape_characters(e[1:])
+                r.font.italic = True
+            elif e.startswith('__') and not e.startswith('___'):
+                r = p.add_run()
+                r.text = parse_escape_characters(e[2:])
+                r.font.bold = True
+            elif e.startswith('___'):
+                r = p.add_run()
+                r.text = parse_escape_characters(e[3:])
+                r.font.italic = True
+                r.font.bold = True
+            else:
+                r = p.add_run()
+                r.text = parse_escape_characters(e)
+            r.font.name = _font
+            r.font.size = Pt(size)
+            r.font.color.rgb = color
 
 def add_rectangle(slide, color, param):
     """
@@ -240,3 +273,11 @@ def add_rectangle(slide, color, param):
     )
     top_rect.fill.solid()
     top_rect.fill.fore_color.rgb = color
+
+
+def set_font(p, _font, size, is_bold, color):
+    font = p.font
+    font.name = _font
+    font.size = Pt(size)
+    font.bold = is_bold
+    font.color.rgb = color

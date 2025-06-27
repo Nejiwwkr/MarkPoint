@@ -1,3 +1,5 @@
+import re
+
 import unicodedata
 
 def _get_char_effective_width(char):
@@ -62,4 +64,53 @@ def estimate_textbox_height(x_in, font_size_pt, text):
         return res * 0.4055 + 0.098425
     else:
         return _estimate_textbox_lines(x_in, font_size_pt, text) * 2
-#//32，0.25+1.37lcm// 18，0.26+0.77l cm //24，0.25+1.03l cm
+    #//32，0.25+1.37lcm// 18，0.26+0.77l cm //24，0.25+1.03l cm
+
+def parse_escape_characters(text):
+    res = re.sub(r'\\n', '\n', text)
+    #res = re.sub(r'\\\\', '\\', res)
+    #res = re.sub(r'\\-', '-', res)
+    return res
+
+
+def complex_split(_s, sep):
+    # 使用正则拆分字符串（保留连续序列）
+    parts = re.split(fr'({sep}+)', _s)
+    n = len(parts)
+
+    # 初始化剩余长度列表：连续1序列记录长度，非序列记为None
+    remain = []
+    for part in parts:
+        if re.fullmatch(fr'{sep}+', part):  # 连续1序列
+            remain.append(len(part))
+        else:  # 非1序列
+            remain.append(None)
+
+    res = []  # 存储最终结果
+    # 遍历偶数索引（非序列的位置）
+    for i in range(0, n, 2):
+        current = parts[i]
+        if current == "":  # 跳过空字符串
+            continue
+
+        # 获取前后连续序列的剩余长度
+        prev_remain = remain[i - 1] if i - 1 >= 0 else 0
+        next_remain = remain[i + 1] if i + 1 < n else 0
+
+        # 计算k（取前后剩余长度的最小值，需>0）
+        k = 0
+        if prev_remain > 0 and next_remain > 0:
+            k = min(prev_remain, next_remain)
+
+        # 从前面的连续1序列中取前k个字符
+        left_str = parts[i - 1][:k] if k > 0 and i - 1 >= 0 else ""
+
+        # 拼接结果并更新剩余长度
+        res.append(left_str + current)
+        if k > 0:
+            if i - 1 >= 0:
+                remain[i - 1] -= k
+            if i + 1 < n:
+                remain[i + 1] -= k
+
+    return res
